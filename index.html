@@ -5,12 +5,11 @@
         <title>Javascript + HTML5 Minesweeper</title>
         <meta name="description" content="HTML5 + Javascript minesweeper">
         <meta name="author" content="Jarkko Lagus">
-        <link rel="stylesheet" href="css/styles.css?v=1.0">
+        
+        <script src="jquery-1.9.0.min.js"></script>
     </head>
     <body>
         <canvas id="gameScreen" width="500" height="500" style="border: 1px solid black"></canvas>
-
-        <script src="jquery-1.9.0.min.js"></script>
 
         <script>
             
@@ -23,16 +22,18 @@
             });
             
             // Block types
-            var MINE = 1;
             var CLOSED = 0;
+            var MINE = 1;
             var OPENED = 2;
             
             // Game initialization variables
             var areaWidth = 15;
             var areaHeight = 15;
             var areaMines = 20;
+            
             var drawBlockSize = 50;
             var fontSize = (drawBlockSize * 0.7);
+            
             var level = generateLevel(areaWidth, areaHeight, areaMines);
             
             // Resize the canvas to match block and area size
@@ -48,6 +49,7 @@
             // user click the play area
             drawScreen(level, areaWidth, areaHeight);
             
+            // Generates new level
             function generateLevel(width, height, mines) {
                 var level = new Array();
                 
@@ -78,10 +80,11 @@
                 return level;
             }
             
-            
+            // The main logic of the game
             function makeGuess(x, y) {
                 if (level[y][x] == MINE) {
-                    alert("POW!!!");
+                    alert("POW!!! You lost the game! \n\nRefresh the page to start a new game.");
+                    $('#gameScreen').off('click');
                 }
                 else if (level[y][x] == CLOSED) {
                     revealFromPoint(x, y);
@@ -102,8 +105,9 @@
                     // Check for nearby free spots and release them
                     for (var i = -1; i < 2; i++) {
                         for (var a = -1; a < 2; a++) {
-                            if (y + i < areaHeight && y + i >= 0 && x + a < areaWidth && x + a >= 0 && 
-                                level[y + i][x + a] == CLOSED && getNearbyMineCount(x + a, y + i) > 0) {
+                            if (isInsideBounds(x + a, y + i) && level[y + i][x + a] == CLOSED && 
+                                getNearbyMineCount(x + a, y + i) > 0) {
+                                
                                 level[y + i][x + a] = OPENED;
                             }
                         }
@@ -113,8 +117,9 @@
                 // Go recursively throught every connected piece
                 for (var i = -1; i < 2; i++) {
                     for (var a = -1; a < 2; a++) {
-                        if (y + i < areaHeight && y + i >= 0 && x + a < areaWidth && x + a >= 0 && 
-                            level[y + i][x + a] == CLOSED && getNearbyMineCount(x + a, y + i) == 0) {
+                        if (isInsideBounds(x + a, y + i) && level[y + i][x + a] == CLOSED && 
+                            getNearbyMineCount(x + a, y + i) == 0) {
+                            
                             revealFromPoint(x + a, y + i);
                         }
                     }
@@ -150,15 +155,13 @@
                 }                
             }
             
-            // Counts the number of mines around the x, y position
+            // Counts the number of mines around the x y -position
             function getNearbyMineCount(x, y) {
                 var mines = 0;
                 
                 for (var i = -1; i < 2; i++) {
                     for (var a = -1; a < 2; a++) {
-                        if (y + i < areaHeight && y + i >= 0 && x + a < areaWidth && x + a >= 0 && 
-                            level[y + i][x + a] == MINE) {
-                            
+                        if (isInsideBounds(x + a, y + i) && level[y + i][x + a] == MINE) {
                             mines++;
                         }
                     }
@@ -167,6 +170,28 @@
                 return mines;
             }
             
+            // Check that position is inside game area
+            function isInsideBounds(x, y) {
+                if (y < 0) {
+                    return false;
+                }
+                else if (y >= areaHeight) {
+                    return false;
+                }
+                else if (x < 0) {
+                    return false;
+                }
+                else if (x >= areaWidth) {
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            // Check if the game is finished
+            //
+            // Counts the opened blocks and compares it to mineless blocks
+            // and if the number is same returns true
             function isFinished() {
                 var all = areaWidth * areaHeight - areaMines;
                 
