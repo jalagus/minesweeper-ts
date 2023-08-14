@@ -23,10 +23,13 @@ function initApp() {
     // Resize the canvas to match block and area size
     var ctx = adjustCanvas(canvas, areaWidth, areaHeight, fontSize, drawBlockSize);
     initGameButton.addEventListener("click", function (event) {
+        event.preventDefault();
         var areaWidth = parseInt(areaWidthInput.value);
         var areaHeight = parseInt(areaHeightInput.value);
         var areaMines = parseInt(mineCountInput.value);
-        event.preventDefault();
+        if (areaWidth * areaHeight < areaMines) {
+            areaMines = areaWidth * areaHeight;
+        }
         level = generateLevel(areaWidth, areaHeight, areaMines);
         var ctx = adjustCanvas(canvas, areaWidth, areaHeight, fontSize, drawBlockSize);
         drawScreen(level, ctx, drawBlockSize, fontSize);
@@ -36,7 +39,9 @@ function initApp() {
         var areaWidth = parseInt(areaWidthInput.value);
         var areaHeight = parseInt(areaHeightInput.value);
         var areaMines = parseInt(mineCountInput.value);
-        event.preventDefault();
+        if (areaWidth * areaHeight < areaMines) {
+            areaMines = areaWidth * areaHeight;
+        }
         level = generateLevel(areaWidth, areaHeight, areaMines);
         var ctx = adjustCanvas(canvas, areaWidth, areaHeight, fontSize, drawBlockSize);
         drawScreen(level, ctx, drawBlockSize, fontSize);
@@ -93,6 +98,7 @@ function makeGuess(x, y, level) {
     if (level[y][x] == BlockType.Mine) {
         statusMsg.style.visibility = "visible";
         messageBox.innerText = "You lost the game!";
+        return;
     }
     else if (level[y][x] == BlockType.Closed) {
         revealFromPoint(level, x, y);
