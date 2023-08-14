@@ -7,7 +7,7 @@ var BlockType;
 function initApp() {
     var areaWidth = 15;
     var areaHeight = 15;
-    var areaMines = 1;
+    var areaMines = 20;
     var drawBlockSize = 40;
     var fontSize = (drawBlockSize * 0.6);
     var level = generateLevel(areaWidth, areaHeight, areaMines);
