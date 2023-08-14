@@ -11,9 +11,28 @@
     <body>
         <div id="App">
             <h1>minesweeper-ts</h1>
+            <form>
+                <div id="controls">
+                    <div class="inputSet">
+                        <label for="areaHeight">Area height</label>
+                        <input type="number" id="areaHeight" value="15"/>
+                    </div>
+                    <div class="inputSet">
+                        <label for="areaWidth">Area width</label>
+                        <input type="number" id="areaWidth" value="15"/>
+                    </div>
+                    <div class="inputSet">
+                        <label for="mineCount">Mines</label>
+                        <input type="number" id="mineCount" value="20"/>
+                    </div>
+                </div>
+                <button id="initGame">New game</button>
+            </form>
             <canvas id="gameScreen" width="500" height="500" style="border: 1px solid black"></canvas>
-            <script src="logic.js"></script>
-            <div id="statusMessage"></div>
+            <div id="statusMessage">
+                <div id="messageBox"></div>
+            </div>
         </div>
+        <script src="logic.js"></script>
     </body>
 </html>

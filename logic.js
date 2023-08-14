@@ -5,34 +5,62 @@ var BlockType;
     BlockType[BlockType["Mine"] = 2] = "Mine";
 })(BlockType || (BlockType = {}));
 function initApp() {
-    var areaWidth = 15;
-    var areaHeight = 15;
-    var areaMines = 20;
     var drawBlockSize = 40;
     var fontSize = (drawBlockSize * 0.6);
-    var level = generateLevel(areaWidth, areaHeight, areaMines);
     var canvas = document.getElementById("gameScreen");
-    // Resize the canvas to match block and area size
-    canvas.width = areaWidth * drawBlockSize;
-    canvas.height = areaHeight * drawBlockSize;
+    var initGameButton = document.getElementById("initGame");
+    var statusMsg = document.getElementById("statusMessage");
+    var mineCountInput = document.getElementById("mineCount");
+    var areaWidthInput = document.getElementById("areaWidth");
+    var areaHeightInput = document.getElementById("areaHeight");
+    var areaWidth = parseInt(areaWidthInput.value);
+    var areaHeight = parseInt(areaHeightInput.value);
+    var areaMines = parseInt(mineCountInput.value);
+    var level = generateLevel(areaWidth, areaHeight, areaMines);
     if (canvas === null) {
         return;
     }
-    var ctx = canvas.getContext('2d');
-    canvas.addEventListener('click', function (event) {
+    // Resize the canvas to match block and area size
+    var ctx = adjustCanvas(canvas, areaWidth, areaHeight, fontSize, drawBlockSize);
+    initGameButton.addEventListener("click", function (event) {
+        var areaWidth = parseInt(areaWidthInput.value);
+        var areaHeight = parseInt(areaHeightInput.value);
+        var areaMines = parseInt(mineCountInput.value);
+        event.preventDefault();
+        level = generateLevel(areaWidth, areaHeight, areaMines);
+        var ctx = adjustCanvas(canvas, areaWidth, areaHeight, fontSize, drawBlockSize);
+        drawScreen(level, ctx, drawBlockSize, fontSize);
+    });
+    statusMsg.addEventListener("click", function (event) {
+        statusMsg.style.visibility = "hidden";
+        var areaWidth = parseInt(areaWidthInput.value);
+        var areaHeight = parseInt(areaHeightInput.value);
+        var areaMines = parseInt(mineCountInput.value);
+        event.preventDefault();
+        level = generateLevel(areaWidth, areaHeight, areaMines);
+        var ctx = adjustCanvas(canvas, areaWidth, areaHeight, fontSize, drawBlockSize);
+        drawScreen(level, ctx, drawBlockSize, fontSize);
+    });
+    canvas.addEventListener("click", function (event) {
         var rect = canvas.getBoundingClientRect();
         var mouseX = event.clientX - rect.left;
         var mouseY = event.clientY - rect.top;
         var x = Math.floor(mouseX / drawBlockSize);
         var y = Math.floor(mouseY / drawBlockSize);
-        makeGuess(x, y, level, function () { return drawScreen(level, areaWidth, areaHeight, ctx, drawBlockSize, fontSize); });
+        makeGuess(x, y, level);
+        drawScreen(level, ctx, drawBlockSize, fontSize);
     }, false);
-    // Initialize the canvas element
-    if (ctx !== null)
-        ctx.font = fontSize + "pt Courier";
     // Starts the game. No main loops because actions happen only when
     // user click the play area
-    drawScreen(level, areaWidth, areaHeight, ctx, drawBlockSize, fontSize);
+    drawScreen(level, ctx, drawBlockSize, fontSize);
+}
+function adjustCanvas(canvas, areaWidth, areaHeight, fontSize, drawBlockSize) {
+    canvas.width = areaWidth * drawBlockSize;
+    canvas.height = areaHeight * drawBlockSize;
+    var ctx = canvas.getContext("2d");
+    if (ctx !== null)
+        ctx.font = fontSize + "pt Courier";
+    return ctx;
 }
 // Generates new level
 function generateLevel(width, height, mines) {
@@ -59,17 +87,19 @@ function generateLevel(width, height, mines) {
     return level;
 }
 // The main logic of the game
-function makeGuess(x, y, level, drawScreenFn) {
+function makeGuess(x, y, level) {
     var statusMsg = document.getElementById("statusMessage");
+    var messageBox = document.getElementById("messageBox");
     if (level[y][x] == BlockType.Mine) {
-        statusMsg.innerText = "POW!!! You lost the game! \n\nRefresh the page to start a new game.";
+        statusMsg.style.visibility = "visible";
+        messageBox.innerText = "You lost the game!";
     }
     else if (level[y][x] == BlockType.Closed) {
         revealFromPoint(level, x, y);
     }
-    drawScreenFn();
     if (isFinished(level)) {
-        statusMsg.innerText = "Congatulation! You won the game!";
+        statusMsg.style.visibility = "visible";
+        messageBox.innerText = "You won the game!";
     }
 }
 // Depth-first search algorithm
@@ -98,9 +128,9 @@ function revealFromPoint(level, x, y) {
     }
 }
 // Updates the screen
-function drawScreen(level, width, height, ctx, drawBlockSize, fontSize) {
-    for (var y = 0; y < height; y++) {
-        for (var x = 0; x < width; x++) {
+function drawScreen(level, ctx, drawBlockSize, fontSize) {
+    for (var y = 0; y < level.length; y++) {
+        for (var x = 0; x < level[0].length; x++) {
             ctx.fillStyle = "#000000";
             ctx.fillRect(x * drawBlockSize, y * drawBlockSize, drawBlockSize, drawBlockSize);
             ctx.fillStyle = "#aaaaaa";

@@ -5,28 +5,60 @@ enum BlockType {
 }
 
 function initApp() {
-    let areaWidth = 15;
-    let areaHeight = 15;
-    let areaMines = 20;
-
     let drawBlockSize = 40;
     let fontSize = (drawBlockSize * 0.6);
-
-    let level = generateLevel(areaWidth, areaHeight, areaMines);
     
     const canvas = document.getElementById("gameScreen") as HTMLCanvasElement;
+    const initGameButton = document.getElementById("initGame") as HTMLButtonElement;
+    const statusMsg = document.getElementById("statusMessage") as HTMLDivElement;
+
     
-    // Resize the canvas to match block and area size
-    canvas.width = areaWidth * drawBlockSize;
-    canvas.height = areaHeight * drawBlockSize;
-    
+    const mineCountInput = document.getElementById("mineCount") as HTMLInputElement;
+    const areaWidthInput = document.getElementById("areaWidth") as HTMLInputElement;
+    const areaHeightInput = document.getElementById("areaHeight") as HTMLInputElement;
+
+    let areaWidth = parseInt(areaWidthInput.value);
+    let areaHeight = parseInt(areaHeightInput.value); 
+    let areaMines = parseInt(mineCountInput.value);
+
+    let level = generateLevel(areaWidth, areaHeight, areaMines);
+
     if (canvas === null) {
         return;
     }
 
-    let ctx = canvas.getContext('2d');
+    // Resize the canvas to match block and area size
+    let ctx = adjustCanvas(canvas, areaWidth, areaHeight, fontSize, drawBlockSize);
 
-    canvas.addEventListener('click', (event) => {
+    initGameButton.addEventListener("click", (event) => {
+        let areaWidth = parseInt(areaWidthInput.value);
+        let areaHeight = parseInt(areaHeightInput.value); 
+        let areaMines = parseInt(mineCountInput.value);
+    
+        event.preventDefault();
+        level = generateLevel(areaWidth, areaHeight, areaMines);
+
+        let ctx = adjustCanvas(canvas, areaWidth, areaHeight, fontSize, drawBlockSize);
+
+        drawScreen(level, ctx, drawBlockSize, fontSize);
+    });
+
+    statusMsg.addEventListener("click", (event) => {
+        statusMsg.style.visibility = "hidden";
+
+        let areaWidth = parseInt(areaWidthInput.value);
+        let areaHeight = parseInt(areaHeightInput.value); 
+        let areaMines = parseInt(mineCountInput.value);
+    
+        event.preventDefault();
+        level = generateLevel(areaWidth, areaHeight, areaMines);
+
+        let ctx = adjustCanvas(canvas, areaWidth, areaHeight, fontSize, drawBlockSize);
+
+        drawScreen(level, ctx, drawBlockSize, fontSize);
+    });
+
+    canvas.addEventListener("click", (event) => {
         const rect = canvas.getBoundingClientRect();
         const mouseX = event.clientX - rect.left;
         const mouseY = event.clientY - rect.top;
@@ -34,15 +66,22 @@ function initApp() {
         var x = Math.floor(mouseX / drawBlockSize);
         var y = Math.floor(mouseY / drawBlockSize);
                         
-        makeGuess(x, y, level, () => drawScreen(level, areaWidth, areaHeight, ctx, drawBlockSize, fontSize));
+        makeGuess(x, y, level);
+        drawScreen(level, ctx, drawBlockSize, fontSize);
     }, false);
-
-    // Initialize the canvas element
-    if (ctx !== null) ctx.font = fontSize + "pt Courier";
 
     // Starts the game. No main loops because actions happen only when
     // user click the play area
-    drawScreen(level, areaWidth, areaHeight, ctx, drawBlockSize, fontSize);    
+    drawScreen(level, ctx, drawBlockSize, fontSize);    
+}
+
+function adjustCanvas(canvas: HTMLCanvasElement, areaWidth, areaHeight, fontSize, drawBlockSize) {
+    canvas.width = areaWidth * drawBlockSize;
+    canvas.height = areaHeight * drawBlockSize;
+    let ctx = canvas.getContext("2d");
+    if (ctx !== null) ctx.font = fontSize + "pt Courier";
+
+    return ctx;
 }
 
 // Generates new level
@@ -77,20 +116,21 @@ function generateLevel(width: number, height: number, mines: number) {
 }
 
 // The main logic of the game
-function makeGuess(x: number, y: number, level: Array<Array<BlockType>>, drawScreenFn: () => void) {
+function makeGuess(x: number, y: number, level: Array<Array<BlockType>>) {
     const statusMsg = document.getElementById("statusMessage") as HTMLDivElement;
+    const messageBox = document.getElementById("messageBox") as HTMLDivElement;
 
     if (level[y][x] == BlockType.Mine) {
-        statusMsg.innerText = "POW!!! You lost the game! \n\nRefresh the page to start a new game.";
+        statusMsg.style.visibility = "visible";
+        messageBox.innerText = "You lost the game!";
     }
     else if (level[y][x] == BlockType.Closed) {
         revealFromPoint(level, x, y);
     }
-
-    drawScreenFn();
         
     if (isFinished(level)) {
-        statusMsg.innerText = "Congatulation! You won the game!";
+        statusMsg.style.visibility = "visible";
+        messageBox.innerText = "You won the game!";
     }
 }
 
@@ -124,10 +164,11 @@ function revealFromPoint(level: Array<Array<BlockType>>, x: number, y: number) {
     }  
 }
 
+
 // Updates the screen
-function drawScreen(level: number[][], width: number, height: number, ctx: any, drawBlockSize: number, fontSize: number) {
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
+function drawScreen(level: Array<Array<BlockType>>, ctx: any, drawBlockSize: number, fontSize: number) {
+    for (let y = 0; y < level.length; y++) {
+        for (let x = 0; x < level[0].length; x++) {
 
             ctx.fillStyle="#000000";
             ctx.fillRect(x * drawBlockSize, y * drawBlockSize, 
