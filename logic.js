@@ -206,6 +206,7 @@ function isInsideBounds(x, y, areaHeight, areaWidth) {
     return true;
 }
 function isFinished(level) {
+    // Checks if any item has the type Closed
     var finished = level.map(function (row) { return row.map(function (block) {
         return block == BlockType.Closed;
     }).reduce(function (a, b) { return a || b; }); }).reduce(function (a, b) { return a || b; });

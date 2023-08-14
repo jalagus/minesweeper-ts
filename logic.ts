@@ -198,7 +198,7 @@ function drawScreen(level: Array<Array<BlockType>>, ctx: any, drawBlockSize: num
         for (let x = 0; x < level[0].length; x++) {
             drawOneBlock(x, y, level, ctx, drawBlockSize, fontSize, "");
         }          
-    }                
+    }
 }
 
 function drawOneBlock(x:number, y: number, level: Array<Array<BlockType>>, ctx: any, drawBlockSize: number, fontSize: number, color: string) {
@@ -264,6 +264,7 @@ function isInsideBounds(x: number, y: number, areaHeight: number, areaWidth: num
 
 
 function isFinished(level: Array<Array<BlockType>>): boolean {        
+    // Checks if any item has the type Closed
     let finished = level.map((row) => row.map((block): boolean => {
         return block == BlockType.Closed;
     }).reduce((a, b) => a || b)).reduce((a, b) => a || b);
