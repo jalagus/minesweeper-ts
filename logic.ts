@@ -11,7 +11,6 @@ function initApp() {
     const canvas = document.getElementById("gameScreen") as HTMLCanvasElement;
     const initGameButton = document.getElementById("initGame") as HTMLButtonElement;
     const statusMsg = document.getElementById("statusMessage") as HTMLDivElement;
-
     
     const mineCountInput = document.getElementById("mineCount") as HTMLInputElement;
     const areaWidthInput = document.getElementById("areaWidth") as HTMLInputElement;
@@ -48,7 +47,27 @@ function initApp() {
         drawScreen(level, ctx, drawBlockSize, fontSize);
     });
 
-    statusMsg.addEventListener("click", (event) => {
+    let lastX = 0;
+    let lastY = 0;
+
+    // Highlighting of the square that is being hovered over
+    canvas.addEventListener("mousemove", (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        var x = Math.floor(mouseX / drawBlockSize);
+        var y = Math.floor(mouseY / drawBlockSize);
+
+        if ((x != lastX) || (lastY != y)) {
+            drawScreen(level, ctx, drawBlockSize, fontSize);
+        }
+        drawOneBlock(x, y, level, ctx, drawBlockSize, fontSize, "#777777");
+        lastX = x;
+        lastY = y;
+    });
+
+    statusMsg.addEventListener("click", () => {
         statusMsg.style.visibility = "hidden";
 
         let areaWidth = parseInt(areaWidthInput.value);
@@ -83,7 +102,7 @@ function initApp() {
     drawScreen(level, ctx, drawBlockSize, fontSize);    
 }
 
-function adjustCanvas(canvas: HTMLCanvasElement, areaWidth, areaHeight, fontSize, drawBlockSize) {
+function adjustCanvas(canvas: HTMLCanvasElement, areaWidth: number, areaHeight: number, fontSize: number, drawBlockSize: number) {
     canvas.width = areaWidth * drawBlockSize;
     canvas.height = areaHeight * drawBlockSize;
     let ctx = canvas.getContext("2d");
@@ -173,34 +192,41 @@ function revealFromPoint(level: Array<Array<BlockType>>, x: number, y: number) {
     }  
 }
 
-
 // Updates the screen
 function drawScreen(level: Array<Array<BlockType>>, ctx: any, drawBlockSize: number, fontSize: number) {
     for (let y = 0; y < level.length; y++) {
         for (let x = 0; x < level[0].length; x++) {
-
-            ctx.fillStyle="#000000";
-            ctx.fillRect(x * drawBlockSize, y * drawBlockSize, 
-                drawBlockSize, drawBlockSize);
-
-            ctx.fillStyle="#aaaaaa";
-            ctx.fillRect(x * drawBlockSize + 1, y * drawBlockSize + 1, 
-                drawBlockSize - 2, drawBlockSize -2);                            
-
-            if (level[y][x] == BlockType.Opened) {
-                let nearbyMines = getNearbyMineCount(level, x, y);
-                
-                ctx.fillStyle="#eeeeee";
-                ctx.fillRect(x * drawBlockSize + 1, y * drawBlockSize + 1, 
-                    drawBlockSize - 2, drawBlockSize - 2);
-                
-                if (nearbyMines > 0) {
-                    ctx.fillStyle="#000000";
-                    ctx.fillText("" + nearbyMines, x * drawBlockSize + (fontSize * 0.4), y * drawBlockSize + (fontSize * 1.3) );
-                }
-            }
+            drawOneBlock(x, y, level, ctx, drawBlockSize, fontSize, "");
         }          
     }                
+}
+
+function drawOneBlock(x:number, y: number, level: Array<Array<BlockType>>, ctx: any, drawBlockSize: number, fontSize: number, color: string) {
+    ctx.fillStyle="#000000";
+    ctx.fillRect(x * drawBlockSize, y * drawBlockSize, 
+        drawBlockSize, drawBlockSize);
+    
+    if (color.length > 0) {
+        ctx.fillStyle = color;    
+    }
+    else {
+        ctx.fillStyle = "#aaaaaa";
+    }
+    ctx.fillRect(x * drawBlockSize + 1, y * drawBlockSize + 1, 
+        drawBlockSize - 2, drawBlockSize -2);                            
+
+    if (level[y][x] == BlockType.Opened) {
+        let nearbyMines = getNearbyMineCount(level, x, y);
+        
+        ctx.fillStyle = "#eeeeee";
+        ctx.fillRect(x * drawBlockSize + 1, y * drawBlockSize + 1, 
+            drawBlockSize - 2, drawBlockSize - 2);
+        
+        if (nearbyMines > 0) {
+            ctx.fillStyle = "#000000";
+            ctx.fillText("" + nearbyMines, x * drawBlockSize + (fontSize * 0.4), y * drawBlockSize + (fontSize * 1.3));
+        }
+    }
 }
 
 // Counts the number of mines around the x y -position

@@ -34,7 +34,23 @@ function initApp() {
         var ctx = adjustCanvas(canvas, areaWidth, areaHeight, fontSize, drawBlockSize);
         drawScreen(level, ctx, drawBlockSize, fontSize);
     });
-    statusMsg.addEventListener("click", function (event) {
+    var lastX = 0;
+    var lastY = 0;
+    // Highlighting of the square that is being hovered over
+    canvas.addEventListener("mousemove", function (event) {
+        var rect = canvas.getBoundingClientRect();
+        var mouseX = event.clientX - rect.left;
+        var mouseY = event.clientY - rect.top;
+        var x = Math.floor(mouseX / drawBlockSize);
+        var y = Math.floor(mouseY / drawBlockSize);
+        if ((x != lastX) || (lastY != y)) {
+            drawScreen(level, ctx, drawBlockSize, fontSize);
+        }
+        drawOneBlock(x, y, level, ctx, drawBlockSize, fontSize, "#777777");
+        lastX = x;
+        lastY = y;
+    });
+    statusMsg.addEventListener("click", function () {
         statusMsg.style.visibility = "hidden";
         var areaWidth = parseInt(areaWidthInput.value);
         var areaHeight = parseInt(areaHeightInput.value);
@@ -137,19 +153,27 @@ function revealFromPoint(level, x, y) {
 function drawScreen(level, ctx, drawBlockSize, fontSize) {
     for (var y = 0; y < level.length; y++) {
         for (var x = 0; x < level[0].length; x++) {
+            drawOneBlock(x, y, level, ctx, drawBlockSize, fontSize, "");
+        }
+    }
+}
+function drawOneBlock(x, y, level, ctx, drawBlockSize, fontSize, color) {
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(x * drawBlockSize, y * drawBlockSize, drawBlockSize, drawBlockSize);
+    if (color.length > 0) {
+        ctx.fillStyle = color;
+    }
+    else {
+        ctx.fillStyle = "#aaaaaa";
+    }
+    ctx.fillRect(x * drawBlockSize + 1, y * drawBlockSize + 1, drawBlockSize - 2, drawBlockSize - 2);
+    if (level[y][x] == BlockType.Opened) {
+        var nearbyMines = getNearbyMineCount(level, x, y);
+        ctx.fillStyle = "#eeeeee";
+        ctx.fillRect(x * drawBlockSize + 1, y * drawBlockSize + 1, drawBlockSize - 2, drawBlockSize - 2);
+        if (nearbyMines > 0) {
             ctx.fillStyle = "#000000";
-            ctx.fillRect(x * drawBlockSize, y * drawBlockSize, drawBlockSize, drawBlockSize);
-            ctx.fillStyle = "#aaaaaa";
-            ctx.fillRect(x * drawBlockSize + 1, y * drawBlockSize + 1, drawBlockSize - 2, drawBlockSize - 2);
-            if (level[y][x] == BlockType.Opened) {
-                var nearbyMines = getNearbyMineCount(level, x, y);
-                ctx.fillStyle = "#eeeeee";
-                ctx.fillRect(x * drawBlockSize + 1, y * drawBlockSize + 1, drawBlockSize - 2, drawBlockSize - 2);
-                if (nearbyMines > 0) {
-                    ctx.fillStyle = "#000000";
-                    ctx.fillText("" + nearbyMines, x * drawBlockSize + (fontSize * 0.4), y * drawBlockSize + (fontSize * 1.3));
-                }
-            }
+            ctx.fillText("" + nearbyMines, x * drawBlockSize + (fontSize * 0.4), y * drawBlockSize + (fontSize * 1.3));
         }
     }
 }
